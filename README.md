@@ -1,8 +1,12 @@
 # SCESAME
 
-![images/SCESAME.drawio.png](images/SCESAME.drawio.png)
+![assets/scesame.png](assets/scesame.png)
 
-Source code for Zero-Shot Edge Detection with SCESAME: Spectral Clustering-based Ensemble for Segment Anything Model Estimation. The paper is [available online](https://arxiv.org/abs/2308.13779).
+> [Zero-Shot Edge Detection with SCESAME: Spectral Clustering-based Ensemble for Segment Anything Model Estimation](https://arxiv.org/abs/2308.13779)                 
+> [Hiroaki Yamagiwa](https://ymgw55.github.io/), Yusuke Takase, Hiroyuki Kambe, [Ryosuke Nakamoto](https://www.let.media.kyoto-u.ac.jp/en/member/ryosuke-nakamoto/)                
+> *WACV 2024 Workshop*
+
+This paper proposes a novel zero-shot edge detection with SCESAME, which stands for Spectral Clustering-based Ensemble for Segment Anything Model Estimation, based on the recently proposed Segment Anything Model (SAM). SAM is a foundation model for segmentation tasks, and one of the interesting applications of SAM is Automatic Mask Generation (AMG), which generates zero-shot segmentation masks of an entire image. AMG can be applied to edge detection, but suffers from the problem of overdetecting edges. Edge detection with SCESAME overcomes this problem by three steps: (1) eliminating small generated masks, (2) combining masks by spectral clustering, taking into account mask positions and overlaps, and (3) removing artifacts after edge detection. 
 
 # Code
 The source code is being organized and will be available soon. 
