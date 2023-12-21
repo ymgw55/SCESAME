@@ -2,7 +2,7 @@
 
 ![assets/scesame.png](assets/scesame.png)
 
-> [Zero-Shot Edge Detection with SCESAME: Spectral Clustering-based Ensemble for Segment Anything Model Estimation](https://arxiv.org/abs/2308.13779)                 
+> [Zero-Shot Edge Detection with SCESAME: Spectral Clustering-based Ensemble for Segment Anything Model Estimation](https://openaccess.thecvf.com/content/WACV2024W/Pretrain/html/Yamagiwa_Zero-Shot_Edge_Detection_With_SCESAME_Spectral_Clustering-Based_Ensemble_for_Segment_WACVW_2024_paper.html)                 
 > [Hiroaki Yamagiwa](https://ymgw55.github.io/), Yusuke Takase, Hiroyuki Kambe, [Ryosuke Nakamoto](https://www.let.media.kyoto-u.ac.jp/en/member/ryosuke-nakamoto/)                
 > *WACV 2024 Workshop*
 
@@ -15,12 +15,12 @@ The source code is being organized and will be available soon.
 # Citation
 If you find our code or model useful in your research, please cite our paper:
 ```
-@misc{yamagiwa2023zeroshot,
-      title={Zero-Shot Edge Detection with SCESAME: Spectral Clustering-based Ensemble for Segment Anything Model Estimation}, 
-      author={Hiroaki Yamagiwa and Yusuke Takase and Hiroyuki Kambe and Ryosuke Nakamoto},
-      year={2023},
-      eprint={2308.13779},
-      archivePrefix={arXiv},
-      primaryClass={cs.CV}
+@InProceedings{Yamagiwa_2024_WACV,
+    author    = {Yamagiwa, Hiroaki and Takase, Yusuke and Kambe, Hiroyuki and Nakamoto, Ryosuke},
+    title     = {Zero-Shot Edge Detection With SCESAME: Spectral Clustering-Based Ensemble for Segment Anything Model Estimation},
+    booktitle = {Proceedings of the IEEE/CVF Winter Conference on Applications of Computer Vision (WACV) Workshops},
+    month     = {January},
+    year      = {2024},
+    pages     = {541-551}
 }
 ```
