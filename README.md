@@ -144,10 +144,16 @@ Additionally, the kernel size of the Gaussian blur for edge detection and the $\
 
 ## Evaluation
 
-Evaluate ODS, OIS, and AP as follows:
+We use [py-bsds500](https://github.com/Britefury/py-bsds500/tree/master) for edge detection. Some bugs have been fixed and ported to the `py-bsds500` directory.
+Compile the extension module with:
+```bash
+cd py-bsds500
+python setup.py build_ext --inplace
+```
+
+Then evaluate ODS, OIS, and AP as follows:
 
 ```bash
-cd py-bsds500/
 python evaluate_parallel.py ../data/BSDS500 ../output/BSDS500/pred/t3_c2_p5_ks3_tau0.5/ test --max_dist 0.0075
 python evaluate_parallel.py ../data/NYUDv2 ../output/NYUDv2/pred/t3_c2_p5_ks3_tau0.5/ test --max_dist 0.011
 ```
