@@ -194,4 +194,3 @@ cython_debug/
 output*
 model/
 data/
-scripts/
