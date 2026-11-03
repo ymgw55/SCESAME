@@ -1,3 +1,12 @@
+# Copyright (c) Meta Platforms, Inc. and affiliates.
+# All rights reserved.
+
+# This source code is licensed under the license found in the
+# LICENSE file in the root directory of this source tree.
+# (In this repository, see third_party_licenses/segment-anything-LICENSE.)
+
+# Changes were made to this file by Hiroaki Yamagiwa.
+
 from typing import Any, Dict, List, Optional, Tuple
 
 import numpy as np

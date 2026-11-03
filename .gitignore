@@ -194,3 +194,5 @@ cython_debug/
 output*
 model/
 data/
+# py-bsds500 is fetched by scripts/setup_py_bsds500.sh
+py-bsds500/

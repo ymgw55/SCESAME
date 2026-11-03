@@ -138,8 +138,12 @@ Additionally, the kernel size of the Gaussian blur for edge detection and the $\
 
 ## Evaluation
 
-We use [py-bsds500](https://github.com/Britefury/py-bsds500/tree/master) for edge detection. Some bugs have been fixed and ported to the `py-bsds500` directory.
-Compile the extension module with:
+We use [py-bsds500](https://github.com/Britefury/py-bsds500/tree/master) for edge detection. Our bug fixes and parallel evaluation script are provided as a patch. Set it up with:
+```bash
+./scripts/setup_py_bsds500.sh
+```
+
+Then compile the extension module with:
 ```bash
 cd py-bsds500
 python setup.py build_ext --inplace
@@ -194,3 +198,9 @@ If you find our code or model useful in your research, please cite our paper:
     pages     = {541-551}
 }
 ```
+
+---
+
+## License
+
+[Apache License 2.0](LICENSE). See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) for third-party code.

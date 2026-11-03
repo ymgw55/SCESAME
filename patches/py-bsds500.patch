@@ -1,0 +1,421 @@
+diff --git a/bsds/bsds_dataset.py b/bsds/bsds_dataset.py
+index ab5a183..b84bd85 100644
+--- a/bsds/bsds_dataset.py
++++ b/bsds/bsds_dataset.py
+@@ -2,12 +2,12 @@ import os
+ import numpy as np
+ from PIL import Image
+ from skimage.util import img_as_float
+-from skimage.color import rgb2grey
++from skimage.color import rgb2gray
+ from skimage.io import imread
+ from scipy.io import loadmat
+ 
+ 
+-class BSDSDataset (object):
++class Dataset (object):
+     """
+     BSDS dataset wrapper
+ 
+@@ -16,22 +16,17 @@ class BSDSDataset (object):
+ 
+     Attribtes:
+ 
+-    bsds_path - the root path of the dataset
+-    data_path - the path of the data directory within the root
++    data_path - the root path of the dataset
+     images_path - the path of the images directory within the data dir
+     gt_path - the path of the groundTruth directory within the data dir
+     train_sample_names - a list of names of training images
+     val_sample_names - a list of names of validation images
+     test_sample_names - a list of names of test images
+     """
+-    def __init__(self, bsds_path):
+-        """
+-        Constructor
++    def __init__(self, data_path, ext):
+ 
+-        :param bsds_path: the path to the root of the BSDS dataset
+-        """
+-        self.bsds_path = bsds_path
+-        self.data_path = os.path.join(bsds_path, 'BSDS500', 'data')
++        self.ext = ext
++        self.data_path = data_path
+         self.images_path = os.path.join(self.data_path, 'images')
+         self.gt_path = os.path.join(self.data_path, 'groundTruth')
+ 
+@@ -39,14 +34,13 @@ class BSDSDataset (object):
+         self.val_sample_names = self._sample_names(self.images_path, 'val')
+         self.test_sample_names = self._sample_names(self.images_path, 'test')
+ 
+-    @staticmethod
+-    def _sample_names(dir, subset):
++    def _sample_names(self, dir, subset):
+         names = []
+         files = os.listdir(os.path.join(dir, subset))
+         for fn in files:
+             dir, filename = os.path.split(fn)
+             name, ext = os.path.splitext(filename)
+-            if ext.lower() == '.jpg':
++            if ext.lower() == self.ext.lower():
+                 names.append(os.path.join(subset, name))
+         return names
+ 
+@@ -58,7 +52,7 @@ class BSDSDataset (object):
+         :param name: the sample name
+         :return: a (H,W,3) array containing the image, scaled to range [0,1]
+         """
+-        path = os.path.join(self.images_path, name + '.jpg')
++        path = os.path.join(self.images_path, name + self.ext)
+         return img_as_float(imread(path))
+ 
+     def get_image_shape(self, name):
+@@ -69,7 +63,7 @@ class BSDSDataset (object):
+         :param name: the sample name
+         :return: a tuple of the form `(height, width, channels)`
+         """
+-        path = os.path.join(self.images_path, name + '.jpg')
++        path = os.path.join(self.images_path, name + self.ext)
+         img = Image.open(path)
+         return img.height, img.width, 3
+ 
+@@ -128,7 +122,7 @@ class BSDSDataset (object):
+         :return: a list of (H,W) arrays, each of which contains a
+         segmentation ground truth
+         """
+-        gt = BSDSDataset.load_ground_truth_mat(path)
++        gt = Dataset.load_ground_truth_mat(path)
+         num_gts = gt.shape[1]
+         return [gt[0,i]['Segmentation'][0,0].astype(np.int32) for i in range(num_gts)]
+ 
+@@ -141,7 +135,7 @@ class BSDSDataset (object):
+         :return: a list of (H,W) arrays, each of which contains a
+         boundary ground truth
+         """
+-        gt = BSDSDataset.load_ground_truth_mat(path)
++        gt = Dataset.load_ground_truth_mat(path)
+         num_gts = gt.shape[1]
+         return [gt[0,i]['Boundaries'][0,0] for i in range(num_gts)]
+ 
+@@ -180,7 +174,9 @@ class BSDSHEDAugDataset (object):
+         '1_0', '1_1'
+     ]
+ 
+-    ALL_AUGS = [(s, r, f) for f in AUG_FLIPS for r in AUG_ROTS for s in AUG_SCALES]
++    ALL_AUGS = []
++    for s, r, f in zip(AUG_SCALES, AUG_ROTS, AUG_FLIPS):
++        ALL_AUGS.append((s, r, f))
+ 
+     def __init__(self, bsds_dataset, root_path):
+         """
+@@ -238,7 +234,7 @@ class BSDSHEDAugDataset (object):
+         parameters.
+         The sample name `name` should come from the `train_sample_names`,
+         `val_sample_names` and `test_sample_names` attributes of a
+-        `BSDSDataset` instance.
++        `Dataset` instance.
+         The `scale`, `rot` and `flip` augmentation parameters should
+         come from `AUG_SCALES`, `AUG_ROTS` and `AUG_FLIPS` attributes
+         of the `BSDSHEDAugDataset` class
+@@ -257,7 +253,7 @@ class BSDSHEDAugDataset (object):
+         and augmentation parameters.
+         The sample name `name` should come from the `train_sample_names`,
+         `val_sample_names` and `test_sample_names` attributes of a
+-        `BSDSDataset` instance.
++        `Dataset` instance.
+         The `scale`, `rot` and `flip` augmentation parameters should
+         come from `AUG_SCALES`, `AUG_ROTS` and `AUG_FLIPS` attributes
+         of the `BSDSHEDAugDataset` class
+@@ -298,4 +294,4 @@ class BSDSHEDAugDataset (object):
+         :return: a list of (H,W) arrays, each of which contains a
+         boundary ground truth
+         """
+-        return rgb2grey(img_as_float(imread(path))).astype(np.float32)
++        return rgb2gray(img_as_float(imread(path))).astype(np.float32)
+diff --git a/bsds/evaluate_boundaries.py b/bsds/evaluate_boundaries_parallel.py
+similarity index 83%
+copy from bsds/evaluate_boundaries.py
+copy to bsds/evaluate_boundaries_parallel.py
+index 4039842..8765bcf 100644
+--- a/bsds/evaluate_boundaries.py
++++ b/bsds/evaluate_boundaries_parallel.py
+@@ -1,6 +1,51 @@
+ from collections import namedtuple
+ import numpy as np
++from typing import Callable, Optional
+ from . import thin, correspond_pixels
++from concurrent.futures import ThreadPoolExecutor, as_completed
++import contextlib
++import joblib
++from tqdm.auto import tqdm
++from tqdm.contrib.concurrent import thread_map  # Required for progress monitoring
++
++
++@contextlib.contextmanager
++def tqdm_joblib(total: Optional[int] = None, **kwargs):
++
++    pbar = tqdm(total=total, miniters=1, smoothing=0, **kwargs)
++
++    class TqdmBatchCompletionCallback(joblib.parallel.BatchCompletionCallBack):
++        def __call__(self, *args, **kwargs):
++            pbar.update(n=self.batch_size)
++            return super().__call__(*args, **kwargs)
++
++    old_batch_callback = joblib.parallel.BatchCompletionCallBack
++    joblib.parallel.BatchCompletionCallBack = TqdmBatchCompletionCallback
++
++    try:
++        yield pbar
++    finally:
++        joblib.parallel.BatchCompletionCallBack = old_batch_callback
++        pbar.close()
++
++
++def evaluate_sample(sample_name, load_pred: Callable, load_gt_boundaries: Callable, thresholds, max_dist):
++    pred = load_pred(sample_name)
++    gt_b = load_gt_boundaries(sample_name)
++
++    count_r, sum_r, count_p, sum_p, used_thresholds = evaluate_boundaries(
++        pred, gt_b, thresholds=thresholds, apply_thinning=True, max_dist=max_dist)
++
++    rec, prec, f1 = compute_rec_prec_f1(count_r, sum_r, count_p, sum_p)
++
++    best_ndx = np.argmax(f1)
++
++    sample_result = SampleResult(
++        sample_name,
++        used_thresholds[best_ndx], rec[best_ndx], prec[best_ndx], f1[best_ndx])
++
++    return sample_result, count_r, sum_r, \
++        count_p, sum_p, best_ndx, used_thresholds
+ 
+ 
+ def evaluate_boundaries_bin(predicted_boundaries_bin, gt_boundaries,
+@@ -134,7 +179,6 @@ def evaluate_boundaries(predicted_boundaries, gt_boundaries,
+     return count_r, sum_r, count_p, sum_p, thresholds
+ 
+ 
+-
+ def compute_rec_prec_f1(count_r, sum_r, count_p, sum_p):
+     """
+     Computer recall, precision and F1-score given `count_r`, `sum_r`,
+@@ -161,8 +205,9 @@ OverallResult = namedtuple('OverallResult', ['threshold', 'recall',
+                                              'best_recall', 'best_precision',
+                                              'best_f1', 'area_pr'])
+ 
+-def pr_evaluation(thresholds, sample_names, load_gt_boundaries, load_pred,
+-                  progress=None):
++
++def pr_evaluation(thresholds, sample_names: list, load_gt_boundaries: Callable, load_pred: Callable,
++                  progress=None, num_workers=1, max_dist=0.0075):
+     """
+     Perform an evaluation of predictions against ground truths for an image
+     set over a given set of thresholds.
+@@ -223,49 +268,40 @@ def pr_evaluation(thresholds, sample_names, load_gt_boundaries, load_pred,
+     else:
+         n_thresh = thresholds.shape[0]
+ 
++    sample_results = []
+     count_r_overall = np.zeros((n_thresh,))
+     sum_r_overall = np.zeros((n_thresh,))
+     count_p_overall = np.zeros((n_thresh,))
+     sum_p_overall = np.zeros((n_thresh,))
+-
+     count_r_best = 0
+     sum_r_best = 0
+     count_p_best = 0
+     sum_p_best = 0
+ 
+-    sample_results = []
+-    for sample_index, sample_name in enumerate(progress(sample_names)):
+-        # Get the paths for the ground truth and predicted boundaries
++    with tqdm_joblib(len(sample_names)):
++        results = joblib.Parallel(n_jobs=num_workers)(
++            joblib.delayed(evaluate_sample)(sample_name, load_pred, load_gt_boundaries, thresholds, max_dist)
++            for sample_name in sample_names
++        )
+ 
+-        # Load them
+-        pred = load_pred(sample_name)
+-        gt_b = load_gt_boundaries(sample_name)
++    for sample_name, result in zip(progress(sample_names), results):
++        # Get the paths for the ground truth and predicted boundaries
+ 
+-        # Evaluate predictions
+-        count_r, sum_r, count_p, sum_p, used_thresholds = \
+-            evaluate_boundaries(pred, gt_b, thresholds=thresholds,
+-                                apply_thinning=True)
++        # Evaluated predictions
++        sample_result, count_r, sum_r, \
++        count_p, sum_p, best_ndx, used_thresholds = result
+ 
+         count_r_overall += count_r
+         sum_r_overall += sum_r
+         count_p_overall += count_p
+         sum_p_overall += sum_p
+ 
+-        # Compute precision, recall and F1
+-        rec, prec, f1 = compute_rec_prec_f1(count_r, sum_r, count_p, sum_p)
+-
+-        # Find best F1 score
+-        best_ndx = np.argmax(f1)
+-
+         count_r_best += count_r[best_ndx]
+         sum_r_best += sum_r[best_ndx]
+         count_p_best += count_p[best_ndx]
+         sum_p_best += sum_p[best_ndx]
+ 
+-        sample_results.append(SampleResult(sample_name,
+-                                           used_thresholds[best_ndx],
+-                                           rec[best_ndx], prec[best_ndx],
+-                                           f1[best_ndx]))
++        sample_results.append(sample_result)
+ 
+     # Computer overall precision, recall and F1
+     rec_overall, prec_overall, f1_overall = compute_rec_prec_f1(
+@@ -281,7 +317,6 @@ def pr_evaluation(thresholds, sample_names, load_gt_boundaries, load_pred,
+                                                  prec_overall[thresh_i],
+                                                  f1_overall[thresh_i]))
+ 
+-
+     rec_unique, rec_unique_ndx = np.unique(rec_overall, return_index=True)
+     prec_unique = prec_overall[rec_unique_ndx]
+     if rec_unique.shape[0] > 1:
+diff --git a/evaluate_parallel.py b/evaluate_parallel.py
+new file mode 100644
+index 0000000..fd8e76f
+--- /dev/null
++++ b/evaluate_parallel.py
+@@ -0,0 +1,132 @@
++import argparse
++import os
++import pickle
++import sys
++
++import numpy as np
++import tqdm
++from skimage.io import imread
++from skimage.util import img_as_float
++
++from bsds import evaluate_boundaries_parallel as evaluate_boundaries
++from bsds.bsds_dataset import Dataset
++from pathlib import Path
++
++
++def parse_args():
++    parser = argparse.ArgumentParser(description='Test output')
++    parser.add_argument('data_path', type=str,
++                        help='the root path of the dataset')
++    parser.add_argument('pred_path', type=str,
++                        help='the root path of the predictions')
++    parser.add_argument('val_test', type=str,
++                        help='val or test')
++    parser.add_argument('--thresholds', type=str, default='99',
++                        help='the number of thresholds')
++    parser.add_argument('--suffix_ext', type=str, default='.png',
++                        help='suffix and extension')
++    parser.add_argument('--num_workers', type=int, default=4,
++                        help='number of workers')
++    parser.add_argument('--max_dist', type=float, default=0.0075)
++    args = parser.parse_args()
++    return args
++
++
++def main():
++    args = parse_args()
++    data_path = args.data_path
++    pred_path = args.pred_path
++    val_test = args.val_test
++    suffix_ext = args.suffix_ext
++    thresholds = args.thresholds
++    thresholds = thresholds.strip()
++    num_workers = args.num_workers
++    max_dist = args.max_dist
++
++    if 'BSDS500' in data_path:
++        ext = '.jpg'
++    elif 'NYUDv2' in data_path:
++        ext = '.png'
++
++    try:
++        n_thresholds = int(thresholds)
++        thresholds = n_thresholds
++    except ValueError:
++        try:
++            if thresholds.startswith('[') and thresholds.endswith(']'):
++                thresholds = thresholds[1:-1]
++                thresholds = np.array(
++                    [float(t.strip()) for t in thresholds.split(',')])
++            else:
++                print('Bad threshold format; '
++                      'should be a python list of floats (`[a, b, c]`)')
++                sys.exit()
++        except ValueError:
++            print('Bad threshold format; '
++                  'should be a python list of ints (`[a, b, c]`)')
++            sys.exit()
++
++    ds = Dataset(data_path, ext)
++
++    if val_test == 'val':
++        SAMPLE_NAMES = ds.val_sample_names
++    elif val_test == 'test':
++        SAMPLE_NAMES = ds.test_sample_names
++    else:
++        print('need to specify either val or test, not {}'.format(val_test))
++        sys.exit()
++
++    def load_gt_boundaries(sample_name):
++        return ds.boundaries(sample_name)
++
++    def load_pred(sample_name):
++        sample_path = os.path.join(pred_path, f'{sample_name}{suffix_ext}')
++        pred = img_as_float(imread(sample_path))
++        bnds = ds.boundaries(sample_name)
++        tgt_shape = bnds[0].shape
++        pred = pred[:tgt_shape[0], :tgt_shape[1]]
++        pred = np.pad(pred, [(0, tgt_shape[0]-pred.shape[0]),
++                             (0, tgt_shape[1]-pred.shape[1])], mode='constant')
++        return pred
++
++    output_dir = Path(pred_path.replace('pred', 'result')) / val_test
++    print(f'output_dir: {output_dir}')
++
++    os.makedirs(output_dir, exist_ok=True)
++    results_path = os.path.join(f'{output_dir}',
++                                f'results_thr{thresholds}.pkl')
++    if os.path.exists(results_path):
++        with open(results_path, 'rb') as f:
++            results = pickle.load(f)
++        SAMPLE_NAMES, sample_results, threshold_results, overall_result = \
++            results
++    else:
++        sample_results, threshold_results, overall_result = \
++            evaluate_boundaries.pr_evaluation(
++                thresholds, SAMPLE_NAMES, load_gt_boundaries,
++                load_pred, progress=tqdm.tqdm, num_workers=num_workers,
++                max_dist=max_dist)
++        results = (SAMPLE_NAMES, sample_results,
++                   threshold_results, overall_result)
++        with open(results_path, 'wb') as f:
++            pickle.dump(results, f)
++
++    ods = overall_result.f1
++    ois = overall_result.best_f1
++
++    rs = []
++    ps = []
++    for res in threshold_results:
++        rs.append(res.recall)
++        ps.append(res.precision)
++    ap = np.trapz(ps[::-1], rs[::-1])
++
++    with open(os.path.join(f'{output_dir}', f'results_thr{thresholds}.txt'),
++              'w') as f:
++        text = f'ODS: {ods:.3f}, OIS: {ois:.3f} AP: {ap:.3f}'
++        print(text, file=f)
++        print(text)
++
++
++if __name__ == '__main__':
++    main()

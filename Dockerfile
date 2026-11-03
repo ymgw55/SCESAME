@@ -16,7 +16,7 @@ COPY requirements.txt /tmp/requirements.txt
 RUN pip install --upgrade pip && \
     pip install -r /tmp/requirements.txt
 
-RUN pip install git+https://github.com/facebookresearch/segment-anything.git
+RUN pip install git+https://github.com/facebookresearch/segment-anything.git@6fdee8f2727f4506cfbbe553e23b895e27956588
 
 # Language settings
 ENV LANG=C.UTF-8
